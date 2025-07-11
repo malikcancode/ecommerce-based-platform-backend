@@ -4,6 +4,7 @@ const otpRoutes = require("./routes/otpRoutes");
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
 const productRoutes = require("./routes/productRoutes");
+const inventoryRoutes = require("./routes/inventoryRoutes");
 
 require("dotenv").config();
 
@@ -14,6 +15,7 @@ app.use("/api/otp", otpRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/protected", protectedRoutes);
 app.use("/api/products", productRoutes);
+app.use("/api/inventory", inventoryRoutes);
 
 connectDB();
 

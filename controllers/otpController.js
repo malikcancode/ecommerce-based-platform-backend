@@ -93,9 +93,11 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       role: role || "buyer",
     });
-    res
-      .status(201)
-      .json({ message: "Registered successfully", role: user.role });
+    res.status(201).json({
+      message: "Registered successfully",
+      role: user.role,
+      id: user._id,
+    });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
@@ -120,7 +122,19 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    res.status(200).json({ token, role: user.role });
+    res.status(200).json({ token, role: user.role, id: user._id });
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+};
+
+exports.deleteUser = async (req, res) => {
+  try {
+    const user = await userModel.findByIdAndDelete(req.params.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ message: "User deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
