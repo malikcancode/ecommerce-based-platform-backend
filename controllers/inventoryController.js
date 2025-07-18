@@ -37,6 +37,7 @@ exports.createInventory = async (req, res) => {
 exports.getAllInventory = async (req, res) => {
   try {
     const inventoryList = await inventoryModel.find().populate("productId");
+    console.log(inventoryList);
     res.status(200).json(inventoryList);
   } catch (error) {
     res.status(500).json({
@@ -59,7 +60,6 @@ exports.updateInventory = async (req, res) => {
   try {
     const { id } = req.params;
     const {
-      productId,
       quantityAvailable,
       lastRestockedDate,
       warehouseLocation,
@@ -69,7 +69,6 @@ exports.updateInventory = async (req, res) => {
     const updatedInventory = await inventoryModel.findByIdAndUpdate(
       id,
       {
-        productId,
         quantityAvailable,
         lastRestockedDate,
         warehouseLocation,

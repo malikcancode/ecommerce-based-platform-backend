@@ -156,3 +156,19 @@ exports.deleteOrder = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getMyOrders = async (req, res) => {
+  try {
+    const orders = await ordersModel
+      .find({ buyer: req.user.id })
+      .populate("items.product", "name price")
+      .sort({ createdAat: -1 });
+    res.status(200).json({
+      message: "Order history fetched successfully",
+      orders,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error while getting orders" });
+  }
+};
