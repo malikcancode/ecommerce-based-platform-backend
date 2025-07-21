@@ -2,7 +2,7 @@ const Product = require("../models/productModel");
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
+    const { name, description, price, category, stock, variations } = req.body;
     if (!name || !description || !price || !category) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -12,6 +12,7 @@ exports.createProduct = async (req, res) => {
       price,
       category,
       stock,
+      variations,
       createdBy: req.user ? req.user.id : undefined,
     });
     res.status(201).json(product);
@@ -54,12 +55,26 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock } = req.body;
+    const { name, description, price, category, stock, variations } = req.body;
+
+    const updatedData = {
+      name,
+      description,
+      price,
+      category,
+      stock,
+    };
+
+    if (variations) {
+      updatedData.variations = variations;
+    }
+
     const product = await Product.findByIdAndUpdate(
       req.params.id,
-      { name, description, price, category, stock },
+      updatedData,
       { new: true, runValidators: true }
     );
+
     if (!product) return res.status(404).json({ message: "Product not found" });
     res.json(product);
   } catch (error) {

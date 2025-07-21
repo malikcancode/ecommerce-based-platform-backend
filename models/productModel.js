@@ -23,6 +23,22 @@ const productSchema = new mongoose.Schema({
     default: 0,
     min: [0, "Stock cannot be negative"],
   },
+  variations: [
+    {
+      color: { type: String },
+      size: { type: String },
+      img: { type: String },
+      stock: {
+        type: Number,
+        default: 0,
+        min: [0, "Stock cannot be negative"],
+      },
+      price: {
+        type: Number,
+        min: [0, "Price must be positive"],
+      },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
