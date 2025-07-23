@@ -1,5 +1,7 @@
 const express = require("express");
 const connectDB = require("./config/db");
+require("dotenv").config();
+const cors = require("cors");
 const otpRoutes = require("./routes/otpRoutes");
 const authRoutes = require("./routes/authRoutes");
 const protectedRoutes = require("./routes/protectedRoutes");
@@ -7,10 +9,16 @@ const productRoutes = require("./routes/productRoutes");
 const inventoryRoutes = require("./routes/inventoryRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 
-require("dotenv").config();
-
 const app = express();
 app.use(express.json());
+
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
 
 app.use("/api/otp", otpRoutes);
 app.use("/api/auth", authRoutes);

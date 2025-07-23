@@ -3,6 +3,7 @@ const generateOtp = require("../utils/generateOtp");
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -32,12 +33,21 @@ exports.sendOtp = async (req, res) => {
       { upsert: true, new: true }
     );
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Your OTP Code",
-      text: `Your OTP is ${otp}`,
-    });
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL_USER,
+        to: email,
+        subject: "Your OTP Code",
+        text: `Your OTP is ${otp}`,
+      });
+      console.log("Email:", email);
+      console.log("OTP:", otp);
+
+      console.log("OTP email sent successfully");
+    } catch (err) {
+      console.error("Error sending email:", err);
+    }
+
     res.status(200).json({ message: "OTP sent to your email" });
   } catch (error) {
     res.status(500).json({ error: "Failed to send OTP" });
@@ -122,10 +132,50 @@ exports.loginUser = async (req, res) => {
       { expiresIn: "30d" }
     );
 
-    res.status(200).json({ token, role: user.role, id: user._id });
+    res.status(200).json({
+      token,
+      role: user.role,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+    });
   } catch (error) {
     res.status(500).json({ error: "Server error" });
   }
+};
+
+exports.requestReset = async (req, res) => {
+  const { email } = req.body;
+  const user = await userModel.findOne({ email });
+  if (!user) return res.status(404).json({ message: "User not found" });
+  const token = crypto.randomBytes(32).toString("hex");
+  user.resetPasswordToken = token;
+  user.resetPasswordExpires = Date.now() + 3600000;
+  await user.save();
+  const resetUrl = `http:localhost:5173/reset-password/${token}`;
+  await transporter.sendMail({
+    to: email,
+    subject: "Password Reset",
+    text: `Reset your password: ${resetUrl}`,
+  });
+  res.json({ message: "Reset link sent to email" });
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+  const user = await userModel.findOne({
+    resetPasswordToken: token,
+    resetPasswordExpires: { $gt: Date.now() },
+  });
+  if (!user)
+    return res.status(400).json({ message: "Invalid or expired token" });
+
+  user.password = await bcrypt.hash(password, 10);
+  user.resetPasswordToken = undefined;
+  user.resetPasswordExpires = undefined;
+  await user.save();
+
+  res.json({ message: "Password reset successful" });
 };
 
 exports.deleteUser = async (req, res) => {
