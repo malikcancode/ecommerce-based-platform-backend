@@ -152,7 +152,7 @@ exports.requestReset = async (req, res) => {
   user.resetPasswordToken = token;
   user.resetPasswordExpires = Date.now() + 3600000;
   await user.save();
-  const resetUrl = `http:localhost:5173/reset-password/${token}`;
+  const resetUrl = `http://localhost:5173/reset-password/${token}`;
   await transporter.sendMail({
     to: email,
     subject: "Password Reset",
