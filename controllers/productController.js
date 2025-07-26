@@ -2,19 +2,61 @@ const Product = require("../models/productModel");
 
 exports.createProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, variations } = req.body;
-    if (!name || !description || !price || !category) {
-      return res.status(400).json({ message: "All fields are required" });
+    const { name, description, price, category, stock, color, sizes, tags } =
+      req.body;
+    let variations = req.body.variations;
+
+    if (!name || !description || !price || !category || !color || !sizes) {
+      return res
+        .status(400)
+        .json({ message: "All required fields must be provided" });
     }
+
+    if (variations && typeof variations === "string") {
+      try {
+        variations = JSON.parse(variations);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid variations format" });
+      }
+    }
+
+    let parsedSizes = sizes;
+    if (typeof sizes === "string") {
+      try {
+        parsedSizes = JSON.parse(sizes);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid sizes format" });
+      }
+    }
+
+    let parsedTags = req.body.tags;
+
+    if (typeof parsedTags === "string") {
+      try {
+        parsedTags = JSON.parse(parsedTags);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid tags format" });
+      }
+    }
+
+    const image = req.files?.image?.[0]
+      ? `/uploads/${req.files.image[0].filename}`
+      : null;
+
     const product = await Product.create({
       name,
       description,
       price,
       category,
       stock,
+      color,
+      tags: parsedTags || [],
+      sizes: parsedSizes,
       variations,
+      image,
       createdBy: req.user ? req.user.id : undefined,
     });
+
     res.status(201).json(product);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -23,10 +65,12 @@ exports.createProduct = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
-    const { search, category, page = 1, limit = 10 } = req.query;
+    const { search, category, tag, size, page = 1, limit = 10 } = req.query;
     const query = {};
     if (search) query.name = { $regex: search, $options: "i" };
-    if (category) query.category = category;
+    if (category && category !== "All Products") query.category = category;
+    if (tag) query.tags = tag;
+    if (size) query.sizes = size;
 
     const products = await Product.find(query)
       .skip((page - 1) * limit)
@@ -55,18 +99,48 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const { name, description, price, category, stock, variations } = req.body;
-
-    const updatedData = {
+    const {
       name,
       description,
       price,
       category,
       stock,
+      color,
+      sizes,
+      variations,
+    } = req.body;
+
+    let updatedData = {
+      name,
+      description,
+      price,
+      category,
+      stock,
+      color,
     };
 
-    if (variations) {
+    if (sizes && typeof sizes === "string") {
+      try {
+        updatedData.sizes = JSON.parse(sizes);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid sizes format" });
+      }
+    } else if (sizes) {
+      updatedData.sizes = sizes;
+    }
+
+    if (variations && typeof variations === "string") {
+      try {
+        updatedData.variations = JSON.parse(variations);
+      } catch (e) {
+        return res.status(400).json({ message: "Invalid variations format" });
+      }
+    } else if (variations) {
       updatedData.variations = variations;
+    }
+
+    if (req.files?.image?.[0]) {
+      updatedData.image = `/uploads/${req.files.image[0].filename}`;
     }
 
     const product = await Product.findByIdAndUpdate(
