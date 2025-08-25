@@ -14,8 +14,11 @@ const {
 router.post(
   "/create",
   protect,
-  checkRole(["admin", "seller"]),
-  upload.fields([{ name: "image", maxCount: 1 }]),
+  checkRole(["admin"]),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "variationImages", maxCount: 10 },
+  ]),
   createProduct
 );
 router.get("/", getProducts);
@@ -24,7 +27,10 @@ router.put(
   "/:id",
   protect,
   checkRole(["admin", "seller"]),
-  upload.single("image"),
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "variationImages", maxCount: 10 },
+  ]),
   updateProduct
 );
 router.delete("/:id", protect, checkRole(["admin", "seller"]), deleteProduct);

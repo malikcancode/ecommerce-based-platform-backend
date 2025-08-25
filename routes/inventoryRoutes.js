@@ -9,28 +9,28 @@ router.get("/:id", inventoryController.getInventoryById);
 router.post(
   "/createInventory",
   protect,
-  checkRole(["admin", "manager"]),
+  checkRole(["admin"]),
   inventoryController.createInventory
 );
 
 router.put(
   "/:id",
   protect,
-  checkRole(["admin", "manager"]),
+  checkRole(["admin"]),
   inventoryController.updateInventory
 );
 
 router.delete(
   "/:id",
   protect,
-  checkRole(["admin", "manager"]),
+  checkRole(["admin"]),
   inventoryController.deleteInventory
 );
 
 router.post(
   "/reduce",
   protect,
-  checkRole(["admin", "manager", "sales"]),
+  checkRole(["admin"]),
   inventoryController.reduceInventoryStock
 );
 

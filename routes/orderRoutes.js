@@ -18,7 +18,7 @@ router.get("/:id", protect, getOrderById);
 router.put(
   "/:id/status",
   protect,
-  checkRole(["admin", "seller"]),
+  checkRole(["admin", "buyer"]),
   updateOrderStatus
 );
 router.delete("/:id", protect, checkRole(["admin", "buyer"]), deleteOrder);

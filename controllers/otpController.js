@@ -4,6 +4,7 @@ const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const logActivity = require("../utils/logActivity");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -103,6 +104,13 @@ exports.registerUser = async (req, res) => {
       password: hashedPassword,
       role: role || "buyer",
     });
+
+    await logActivity(
+      "USER_REGISTERED",
+      user.email,
+      `New user ${user.name} registered`
+    );
+
     res.status(201).json({
       message: "Registered successfully",
       role: user.role,
@@ -127,6 +135,7 @@ exports.loginUser = async (req, res) => {
       {
         id: user._id,
         role: user.role,
+        email: user.email,
       },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
@@ -178,14 +187,11 @@ exports.resetPassword = async (req, res) => {
   res.json({ message: "Password reset successful" });
 };
 
-exports.deleteUser = async (req, res) => {
+exports.getAllUsers = async (req, res) => {
   try {
-    const user = await userModel.findByIdAndDelete(req.params.id);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({ message: "User deleted successfully" });
+    const users = await userModel.find({}, "-password");
+    res.json(users);
   } catch (error) {
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
